@@ -1,0 +1,14 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    uses: halo-sigs/reusable-workflows/.github/workflows/plugin-ci.yaml@v5
+    with:
+      ui-path: ui
+      node-version: "20"
+      pnpm-version: "9"

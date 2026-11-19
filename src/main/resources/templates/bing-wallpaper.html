@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="https://www.thymeleaf.org"
+  th:replace="~{layout :: html(head = ~{::head}, content = ~{::content})}"
+>
+  <th:block th:fragment="head">
+    <title th:text="|${pageTitle} - ${site.title}|">Bing 每日一图</title>
+    <style>
+      :root {
+        --md-primary: #0061a4;
+        --md-on-primary: #ffffff;
+        --md-primary-container: #d1e4ff;
+        --md-on-primary-container: #001d36;
+        --md-secondary-container: #d7e3f7;
+        --md-on-secondary-container: #101c2b;
+        --md-tertiary-container: #ffdea6;
+        --md-on-tertiary-container: #261900;
+        --md-surface: #f8f9ff;
+        --md-surface-container-lowest: #ffffff;
+        --md-surface-container-low: #f2f3fa;
+        --md-surface-container: #eceef4;
+        --md-surface-container-high: #e6e8ee;
+        --md-on-surface: #191c20;
+        --md-on-surface-variant: #43474e;
+        --md-outline: #73777f;
+        --md-outline-variant: #c3c7cf;
+        --md-state: rgba(25, 28, 32, 0.08);
+        --md-elev1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+        --md-elev2: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+        --md-ease: cubic-bezier(0.2, 0, 0, 1);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --md-primary: #9ecaff;
+          --md-on-primary: #003258;
+          --md-primary-container: #00497d;
+          --md-on-primary-container: #d1e4ff;
+          --md-secondary-container: #3a495c;
+          --md-on-secondary-container: #d7e3f7;
+          --md-tertiary-container: #5c4200;
+          --md-on-tertiary-container: #ffdea6;
+          --md-surface: #111318;
+          --md-surface-container-lowest: #0c0e13;
+          --md-surface-container-low: #191c20;
+          --md-surface-container: #1d2024;
+          --md-surface-container-high: #282a2f;
+          --md-on-surface: #e2e2e9;
+          --md-on-surface-variant: #c3c7cf;
+          --md-outline: #8d9199;
+          --md-outline-variant: #43474e;
+          --md-state: rgba(226, 222, 233, 0.08);
+        }
+      }
+      html, body {
+        background: var(--md-surface, #f8f9ff) !important;
+        scrollbar-color: var(--md-outline-variant, #c3c7cf) var(--md-surface, #f8f9ff);
+        scrollbar-width: thin;
+      }
+      html::-webkit-scrollbar, body::-webkit-scrollbar { width: 8px; height: 8px; }
+      html::-webkit-scrollbar-track, body::-webkit-scrollbar-track { background: var(--md-surface, #f8f9ff); }
+      html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
+        background: var(--md-outline-variant, #c3c7cf);
+        border-radius: 4px;
+      }
+      html::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover { background: var(--md-outline, #73777f); }
+
+      .bw-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 16px 56px;
+        color: var(--md-on-surface);
+        font-family: Roboto, "Segoe UI", system-ui, -apple-system, "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      .bw-page * { box-sizing: border-box; }
+      .bw-page a:not(.bw-btn) { color: var(--md-primary); }
+
+      .md-state { position: relative; }
+      .md-state::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: currentColor;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s var(--md-ease);
+      }
+      .md-state:hover::after { opacity: 0.08; }
+      .md-state:active::after { opacity: 0.12; }
+
+      .bw-header { margin-bottom: 24px; }
+      .bw-header h1 {
+        margin: 0 0 4px;
+        font-size: 36px;
+        line-height: 44px;
+        font-weight: 400;
+        letter-spacing: 0;
+        color: var(--md-on-surface);
+      }
+      .bw-header-sub {
+        margin: 0 0 16px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--md-on-surface-variant);
+      }
+      .bw-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .bw-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 16px;
+        border-radius: 8px;
+        border: 1px solid var(--md-outline-variant);
+        color: var(--md-on-surface-variant);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 20px;
+        background: transparent;
+      }
+      .bw-chip-tonal {
+        border-color: transparent;
+        background: var(--md-tertiary-container);
+        color: var(--md-on-tertiary-container);
+      }
+      .bw-chip svg { width: 18px; height: 18px; fill: currentColor; }
+
+      .bw-spot {
+        display: grid;
+        grid-template-columns: minmax(260px, 44%) 1fr;
+        gap: 24px;
+        padding: 16px;
+        margin-bottom: 32px;
+        border-radius: 12px;
+        background: var(--md-surface-container-low);
+        box-shadow: var(--md-elev1);
+      }
+      .bw-spot-img {
+        position: relative;
+        display: block;
+        border-radius: 12px;
+        overflow: hidden;
+        line-height: 0;
+      }
+      .bw-spot-img img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+      .bw-spot-tag {
+        position: absolute;
+        left: 12px;
+        top: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: var(--md-tertiary-container);
+        color: var(--md-on-tertiary-container);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+        line-height: 16px;
+      }
+      .bw-spot-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 8px 8px 8px 0; }
+      .bw-spot-date {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+        color: var(--md-on-surface-variant);
+      }
+      .bw-spot-title { margin: 0; font-size: 24px; line-height: 32px; font-weight: 400; color: var(--md-on-surface); }
+      .bw-spot-sub { margin: 0; font-size: 14px; line-height: 20px; color: var(--md-on-surface-variant); }
+      .bw-spot-desc { margin: 0; font-size: 14px; line-height: 20px; color: var(--md-on-surface-variant); }
+      .bw-spot-copy { margin: 0; font-size: 11px; line-height: 16px; letter-spacing: 0.4px; color: var(--md-on-surface-variant); }
+      .bw-spot-actions { margin-top: auto; padding-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+      @media (max-width: 760px) {
+        .bw-spot { grid-template-columns: 1fr; }
+        .bw-header h1 { font-size: 28px; line-height: 36px; }
+      }
+
+      .bw-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 24px;
+        border-radius: 20px;
+        border: none;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.1px;
+        line-height: 20px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: box-shadow 0.15s var(--md-ease), background-color 0.15s var(--md-ease);
+      }
+      .bw-btn svg { width: 18px; height: 18px; fill: currentColor; }
+      .bw-btn-filled { background: var(--md-primary); color: var(--md-on-primary); }
+      .bw-btn-filled:hover { box-shadow: var(--md-elev1); }
+      .bw-btn-tonal { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+      .bw-btn-tonal:hover { box-shadow: var(--md-elev1); }
+      .bw-btn-outlined { background: transparent; color: var(--md-primary); border: 1px solid var(--md-outline); }
+      .bw-btn-text { background: transparent; color: var(--md-primary); padding: 0 12px; }
+
+      .bw-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .bw-section-title { margin: 0; font-size: 16px; line-height: 24px; font-weight: 500; color: var(--md-on-surface); }
+      .bw-years { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+      .bw-years a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 16px;
+        border-radius: 8px;
+        border: 1px solid var(--md-outline-variant);
+        background: transparent;
+        color: var(--md-on-surface-variant);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 20px;
+        text-decoration: none;
+        transition: background-color 0.15s var(--md-ease), border-color 0.15s var(--md-ease);
+      }
+      .bw-years a:hover { background: var(--md-state); }
+      .bw-years a.bw-active {
+        background: var(--md-secondary-container);
+        border-color: transparent;
+        color: var(--md-on-secondary-container);
+      }
+      .bw-years a.bw-active::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        background: currentColor;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") center / contain no-repeat;
+      }
+      .bw-years .bw-count { font-size: 12px; opacity: 0.7; }
+
+      .bw-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .bw-grid.bw-masonry { grid-auto-rows: 4px; row-gap: 0; }
+      .bw-grid.bw-masonry .bw-card { grid-row-end: span var(--span, 104); }
+      .bw-grid.bw-masonry .bw-card-inner { height: calc(100% - 16px); }
+      .bw-card {
+        min-width: 0;
+        animation: bw-fade 0.24s var(--md-ease) both;
+        animation-delay: var(--d, 0ms);
+      }
+      .bw-card-inner {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border-radius: 12px;
+        background: var(--md-surface-container-lowest);
+        box-shadow: var(--md-elev1);
+        overflow: hidden;
+        transition: box-shadow 0.2s var(--md-ease), background-color 0.2s var(--md-ease);
+      }
+      .bw-card:hover .bw-card-inner { box-shadow: var(--md-elev2); background: var(--md-surface-container-low); }
+      @keyframes bw-fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .bw-card-img { position: relative; display: block; line-height: 0; }
+      .bw-card-img img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--md-surface-container); }
+      .bw-card-date {
+        position: absolute;
+        left: 12px;
+        bottom: 12px;
+        display: inline-flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: var(--md-surface-container-lowest);
+        color: var(--md-on-surface);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+        line-height: 16px;
+        box-shadow: var(--md-elev1);
+      }
+      .bw-today-badge {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        display: inline-flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: var(--md-tertiary-container);
+        color: var(--md-on-tertiary-container);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+        line-height: 16px;
+      }
+      .bw-card-body { display: flex; flex-direction: column; gap: 4px; padding: 16px; flex: 1; }
+      .bw-card-title { margin: 0; font-size: 16px; line-height: 24px; font-weight: 500; color: var(--md-on-surface); }
+      .bw-card-sub { margin: 0; font-size: 14px; line-height: 20px; color: var(--md-on-surface-variant); }
+      .bw-card-copy { margin: 0; font-size: 11px; line-height: 16px; letter-spacing: 0.4px; color: var(--md-on-surface-variant); }
+      .bw-details { margin: 4px 0 0; }
+      .bw-details summary {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 32px;
+        padding: 0 12px;
+        margin-left: -12px;
+        border-radius: 16px;
+        cursor: pointer;
+        list-style: none;
+        color: var(--md-primary);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 20px;
+      }
+      .bw-details summary::-webkit-details-marker { display: none; }
+      .bw-details summary:hover { background: var(--md-state); }
+      .bw-details summary svg { width: 18px; height: 18px; fill: currentColor; transition: transform 0.15s var(--md-ease); }
+      .bw-details[open] summary svg { transform: rotate(180deg); }
+      .bw-details p { margin: 4px 0 8px; font-size: 14px; line-height: 20px; color: var(--md-on-surface-variant); white-space: pre-line; }
+      .bw-format-links { white-space: normal !important; display: flex; flex-wrap: wrap; gap: 6px; }
+      .bw-format-links a {
+        display: inline-flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1px solid var(--md-outline-variant);
+        color: var(--md-on-surface-variant);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+        line-height: 16px;
+        text-decoration: none;
+        transition: background-color 0.15s var(--md-ease);
+      }
+      .bw-format-links a:hover { background: var(--md-state); }
+      .bw-card-actions { margin-top: auto; padding-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+      .bw-card-actions .bw-btn { height: 36px; padding: 0 16px; font-size: 13px; }
+
+      .bw-pager { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 32px; }
+      .bw-pager a {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 20px;
+        border: 1px solid var(--md-outline);
+        color: var(--md-primary);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 20px;
+        text-decoration: none;
+        transition: background-color 0.15s var(--md-ease);
+      }
+      .bw-pager a:hover { background: var(--md-state); }
+      .bw-pager a svg { width: 18px; height: 18px; fill: currentColor; }
+      .bw-pager-status { padding: 0 8px; font-size: 14px; line-height: 20px; color: var(--md-on-surface-variant); }
+      .bw-empty {
+        padding: 64px 24px;
+        text-align: center;
+        border-radius: 12px;
+        background: var(--md-surface-container-low);
+        color: var(--md-on-surface-variant);
+      }
+      .bw-empty svg { width: 64px; height: 64px; fill: var(--md-outline); margin-bottom: 16px; }
+      .bw-empty-title { margin: 0 0 4px; font-size: 16px; line-height: 24px; font-weight: 500; color: var(--md-on-surface); }
+      .bw-empty p { margin: 0; font-size: 14px; line-height: 20px; }
+      .bw-foot {
+        margin-top: 40px;
+        padding-top: 16px;
+        border-top: 1px solid var(--md-outline-variant);
+        font-size: 11px;
+        line-height: 16px;
+        letter-spacing: 0.4px;
+        color: var(--md-on-surface-variant);
+        text-align: center;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .bw-card { animation: none; }
+        .bw-card, .bw-btn, .bw-years a, .bw-details summary svg, .md-state::after { transition: none; }
+      }
+    </style>
+  </th:block>
+  <th:block th:fragment="content">
+    <section class="bw-page">
+      <header class="bw-header">
+        <h1 th:text="${pageTitle}">Bing 每日一图</h1>
+        <p class="bw-header-sub">必应每日壁纸档案 · 全参数收录 · 官方多分辨率下载</p>
+        <div class="bw-chips">
+          <span class="bw-chip" th:text="|共 ${total} 张|">共 0 张</span>
+          <span class="bw-chip" th:text="|${#lists.size(years)} 个年份|">0 个年份</span>
+          <span class="bw-chip bw-chip-tonal" th:if="${today != null}">
+            <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>
+            今日已入库
+          </span>
+        </div>
+      </header>
+
+      <div class="bw-spot" th:if="${today != null}">
+        <a class="bw-spot-img" th:href="${today.bing_url}" target="_blank" rel="noopener noreferrer">
+          <img
+            th:src="${today.formats['1920x1080'] != null ? today.formats['1920x1080'] : today.url}"
+            th:alt="${today.title}"
+          />
+          <span class="bw-spot-tag">今日一图</span>
+        </a>
+        <div class="bw-spot-body">
+          <span class="bw-spot-date" th:text="${today.date}">2026-01-01</span>
+          <h2 class="bw-spot-title" th:text="${today.title}">标题</h2>
+          <p class="bw-spot-sub" th:if="${today.subtitle != ''}" th:text="${today.subtitle}">副标题</p>
+          <p class="bw-spot-desc" th:if="${today.description != ''}" th:text="${#strings.abbreviate(today.description, 150)}">描述</p>
+          <p class="bw-spot-copy" th:if="${today.copyright != ''}" th:text="${today.copyright}">版权</p>
+          <div class="bw-spot-actions">
+            <a class="bw-btn bw-btn-filled md-state" th:href="${today.bing_url}" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+              必应原图 UHD
+            </a>
+            <a class="bw-btn bw-btn-tonal md-state" th:href="${today.url}" th:download="|bing-${today.date}.jpg|">
+              <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+              下载 1080P
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="bw-section-head">
+        <h2 class="bw-section-title">壁纸档案</h2>
+      </div>
+      <nav class="bw-years" th:if="${not #lists.isEmpty(years)}">
+        <a
+          th:each="y : ${years}"
+          th:href="@{${'/' + routePath}(year=${y.year})}"
+          th:classappend="${y.year == year} ? 'bw-active'"
+        >
+          <span th:text="${y.year}">2026</span><span class="bw-count" th:text="${y.count}">0</span>
+        </a>
+      </nav>
+
+      <div class="bw-empty" th:if="${#lists.isEmpty(wallpapers)}">
+        <svg viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        <p class="bw-empty-title">暂无壁纸数据</p>
+        <p>请在 Console「插件 → Bing 每日一图」中导入历史数据或抓取今日壁纸</p>
+      </div>
+
+      <div class="bw-grid" th:if="${not #lists.isEmpty(wallpapers)}">
+        <article
+          class="bw-card"
+          th:each="w, iter : ${wallpapers}"
+          th:style="'--d:' + ${iter.index < 8 ? iter.index * 30 : 240} + 'ms'"
+        >
+          <div class="bw-card-inner">
+          <a class="bw-card-img" th:href="${w.bing_url}" target="_blank" rel="noopener noreferrer" th:title="|查看 ${w.date} 原图|">
+            <img
+              th:src="${w.formats['1366x768'] != null ? w.formats['1366x768'] : w.url}"
+              th:alt="${w.title}"
+              loading="lazy"
+            />
+            <span class="bw-card-date" th:text="${w.date}">2026-01-01</span>
+            <span class="bw-today-badge" th:if="${today != null and today.date == w.date}">今日</span>
+          </a>
+          <div class="bw-card-body">
+            <h3 class="bw-card-title" th:text="${w.title}">标题</h3>
+            <p class="bw-card-sub" th:if="${w.subtitle != ''}" th:text="${w.subtitle}">副标题</p>
+            <p class="bw-card-copy" th:if="${w.copyright != ''}" th:text="${w.copyright}">版权</p>
+            <details class="bw-details" th:if="${w.description != ''}">
+              <summary>
+                <svg viewBox="0 0 24 24"><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>
+                故事详情
+              </summary>
+              <p th:text="${w.description}">描述</p>
+            </details>
+            <details class="bw-details" th:if="${not #maps.isEmpty(w.formats)}">
+              <summary>
+                <svg viewBox="0 0 24 24"><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>
+                更多尺寸
+              </summary>
+              <p class="bw-format-links">
+                <a
+                  th:each="f : ${w.formats}"
+                  th:href="${f.value}"
+                  th:text="${f.key}"
+                  th:download="|bing-${w.date}-${f.key}.jpg|"
+                >UHD</a>
+              </p>
+            </details>
+            <div class="bw-card-actions">
+              <a class="bw-btn bw-btn-filled md-state" th:href="${w.bing_url}" target="_blank" rel="noopener noreferrer">原图 UHD</a>
+              <a class="bw-btn bw-btn-outlined md-state" th:href="${w.url}" th:download="|bing-${w.date}.jpg|">下载 1080P</a>
+            </div>
+          </div>
+          </div>
+        </article>
+      </div>
+
+      <nav class="bw-pager" th:if="${totalPages > 1}">
+        <a th:if="${page > 1}" th:href="@{${'/' + routePath}(year=${year},page=${page - 1})}">
+          <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+          上一页
+        </a>
+        <span class="bw-pager-status" th:text="|第 ${page} / ${totalPages} 页 · 本年 ${yearTotal} 张|">第 1 / 1 页</span>
+        <a th:if="${page < totalPages}" th:href="@{${'/' + routePath}(year=${year},page=${page + 1})}">
+          下一页
+          <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </a>
+      </nav>
+
+      <footer class="bw-foot">壁纸版权归 Bing 及原作者所有 · 本页面仅做索引与展示</footer>
+    </section>
+    <script>
+      (function () {
+        var grid = document.querySelector('.bw-grid');
+        if (!grid || !grid.querySelector('.bw-card')) return;
+        var ROW = 4, GAP = 16;
+        function layout(card) {
+          var inner = card.querySelector('.bw-card-inner');
+          if (!inner) return;
+          inner.style.height = 'auto';
+          var h = inner.getBoundingClientRect().height;
+          inner.style.height = '';
+          card.style.setProperty('--span', Math.max(1, Math.ceil((h + GAP) / ROW)));
+        }
+        function layoutAll() {
+          var cards = grid.querySelectorAll('.bw-card');
+          for (var i = 0; i < cards.length; i++) layout(cards[i]);
+        }
+        grid.classList.add('bw-masonry');
+        layoutAll();
+        var imgs = grid.querySelectorAll('img');
+        for (var i = 0; i < imgs.length; i++) {
+          (function (img) {
+            if (img.complete) return;
+            var done = function () {
+              var c = img.closest('.bw-card');
+              if (c) layout(c);
+            };
+            img.addEventListener('load', done, { once: true });
+            img.addEventListener('error', done, { once: true });
+          })(imgs[i]);
+        }
+        grid.addEventListener('toggle', function (e) {
+          var c = e.target.closest ? e.target.closest('.bw-card') : null;
+          if (c) requestAnimationFrame(function () { layout(c); });
+        }, true);
+        var rt;
+        window.addEventListener('resize', function () {
+          clearTimeout(rt);
+          rt = setTimeout(layoutAll, 120);
+        });
+        window.addEventListener('load', layoutAll);
+      })();
+    </script>
+  </th:block>
+</html>

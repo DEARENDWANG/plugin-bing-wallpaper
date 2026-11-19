@@ -1,0 +1,17 @@
+name: CD
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  cd:
+    uses: halo-sigs/reusable-workflows/.github/workflows/plugin-cd.yaml@v5
+    permissions:
+      contents: write
+    with:
+      ui-path: ui
+      node-version: "20"
+      pnpm-version: "9"
+      # 首次上架审核通过后再配置 app-id 与 halo-pat，并移除 skip-appstore-release
+      skip-appstore-release: true

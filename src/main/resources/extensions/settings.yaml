@@ -1,0 +1,63 @@
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: plugin-bing-wallpaper-settings
+spec:
+  forms:
+    - group: basic
+      label: 数据源
+      formSchema:
+        - $formkit: text
+          name: dataUrlTemplate
+          label: 历史数据接口模板
+          value: ""
+          placeholder: "https://example.com/data/CN/year_{year}.json"
+          help: "必须包含 {year} 占位符，接口需返回壁纸 JSON 数组。仅用于导入历史数据，导入后不再依赖该接口；也可以不配置，直接在管理页上传 JSON 文件导入。详情请见：https://github.com/DEARENDWANG/plugin-bing-wallpaper#快速开始"
+        - $formkit: number
+          name: startYear
+          label: 起始年份
+          value: 2019
+          validation: required|min:2000|max:2100
+          help: "导入历史数据时从该年份开始，直到当前年份。"
+    - group: fetch
+      label: 每日抓取
+      formSchema:
+        - $formkit: select
+          name: enabled
+          label: 每日自动抓取
+          value: "true"
+          options:
+            - label: 启用
+              value: "true"
+            - label: 停用
+              value: "false"
+          help: "启用后到点直接抓取 cn.bing.com 当日壁纸并存入数据库，当天已有数据则跳过。"
+        - $formkit: text
+          name: fetchTime
+          label: 每日抓取时间（北京时间）
+          value: "00:02"
+          placeholder: "00:02"
+          validation: required
+          help: "24 小时制 HH:mm。抓取失败时每 10 分钟自动重试，直到当天数据入库。"
+    - group: page
+      label: 前台页面
+      formSchema:
+        - $formkit: text
+          name: pageTitle
+          label: 页面标题
+          value: "Bing 每日一图"
+          placeholder: "Bing 每日一图"
+          help: "前台页面主标题与浏览器标题（自动拼接站点名），主题也可通过 Finder 读取。"
+        - $formkit: text
+          name: routePath
+          label: 前台路由路径
+          value: "bing-wallpaper"
+          placeholder: "bing-wallpaper"
+          validation: required
+          help: "前台页面地址，无需首尾斜杠，支持多级如 wallpaper/bing。保存后立即生效，主题覆盖模板名仍为 bing-wallpaper.html。"
+        - $formkit: number
+          name: pageSize
+          label: 每页壁纸数量
+          value: 24
+          validation: required|min:1|max:100
+          help: "前台页面每页展示的壁纸数量，Finder 的按页查询默认也使用该值。"

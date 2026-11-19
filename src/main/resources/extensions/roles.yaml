@@ -1,0 +1,52 @@
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-bing-wallpaper-role-view
+  labels:
+    halo.run/role-template: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "Bing 每日一图"
+    rbac.authorization.halo.run/display-name: "壁纸查看"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["plugin:plugin-bing-wallpaper:view"]
+rules:
+  - apiGroups: ["bingwallpaper.dearend.wang"]
+    resources: ["wallpapers"]
+    verbs: ["get", "list"]
+  - apiGroups: ["console.api.bingwallpaper.dearend.wang"]
+    resources: ["wallpapers/stats", "wallpapers/export"]
+    verbs: ["get", "list"]
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-bing-wallpaper-role-manage
+  labels:
+    halo.run/role-template: "true"
+  annotations:
+    rbac.authorization.halo.run/dependencies: |
+      ["plugin-bing-wallpaper-role-view"]
+    rbac.authorization.halo.run/module: "Bing 每日一图"
+    rbac.authorization.halo.run/display-name: "壁纸管理"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["plugin:plugin-bing-wallpaper:manage"]
+rules:
+  - apiGroups: ["bingwallpaper.dearend.wang"]
+    resources: ["wallpapers"]
+    verbs: ["*"]
+  - apiGroups: ["console.api.bingwallpaper.dearend.wang"]
+    resources: ["wallpapers/import", "wallpapers/import-data", "wallpapers/fetch-today"]
+    verbs: ["create", "update", "get", "list"]
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-bing-wallpaper-role-anonymous
+  labels:
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+    rbac.authorization.halo.run/aggregate-to-anonymous: "true"
+rules:
+  - apiGroups: ["api.bingwallpaper.dearend.wang"]
+    resources: ["wallpapers", "wallpapers/today", "wallpapers/years"]
+    verbs: ["get", "list"]

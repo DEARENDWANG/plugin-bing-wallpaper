@@ -1,0 +1,20 @@
+apiVersion: plugin.halo.run/v1alpha1
+kind: Plugin
+metadata:
+  name: plugin-bing-wallpaper
+spec:
+  requires: ">=2.26.0"
+  displayName: "Bing 每日一图"
+  description: "预览 Bing 每日一图（CN）的全部壁纸参数，支持历史数据导入、每日定时抓取与 JSON 导出。"
+  logo: logo.png
+  author:
+    name: END
+    website: https://dearend.wang
+  homepage: https://dearend.wang/
+  repo: https://github.com/DEARENDWANG/plugin-bing-wallpaper
+  issues: https://github.com/DEARENDWANG/plugin-bing-wallpaper/issues
+  license:
+    - name: "GPL-3.0"
+      url: "https://github.com/DEARENDWANG/plugin-bing-wallpaper/blob/main/LICENSE"
+  settingName: plugin-bing-wallpaper-settings
+  configMapName: plugin-bing-wallpaper-configmap

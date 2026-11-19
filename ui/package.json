@@ -1,0 +1,27 @@
+{
+  "name": "plugin-bing-wallpaper-ui",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch --mode=development",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@halo-dev/api-client": "^2.27.0",
+    "@halo-dev/components": "^2.27.0",
+    "@halo-dev/ui-shared": "^2.27.0",
+    "axios": "^1.7.2",
+    "vue": "^3.5.17"
+  },
+  "devDependencies": {
+    "@halo-dev/ui-plugin-bundler-kit": "2.27.0",
+    "@types/node": "^20.19.1",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/tsconfig": "^0.7.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.0",
+    "vue-router": "^4.5.0",
+    "vue-tsc": "^2.2.10"
+  }
+}

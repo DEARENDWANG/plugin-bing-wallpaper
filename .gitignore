@@ -1,0 +1,10 @@
+.gradle/
+build/
+ui/build/
+ui/node_modules/
+workplace/
+.logo-tool/
+.idea/
+*.iml
+.DS_Store
+docs/release-record.md
