@@ -153,6 +153,7 @@ async function fetchToday() {
   try {
     const { data } = await axiosInstance.post(`${CONSOLE_BASE}/wallpapers/fetch-today`);
     Toast.success(data.created ? `已抓取今日壁纸：${data.wallpaper.date}` : "今日壁纸已存在");
+    await waitStats((s) => s.todayFetched && s.years.length > 0);
     await refresh();
   } catch (e: any) {
     Toast.error(e?.response?.data?.message || "抓取今日壁纸失败");
@@ -183,6 +184,8 @@ async function importAll() {
       }
     }
     Toast.success(`导入完成：新增 ${importedTotal} 条，已存在跳过 ${skippedTotal} 条`);
+    const expected = (stats.value?.total ?? 0) + importedTotal;
+    await waitStats((s) => s.total >= expected);
     await refresh();
   } finally {
     importing.value = false;
@@ -208,12 +211,27 @@ async function importFile(event: Event) {
       `导入完成：新增 ${data.imported} 条，已存在跳过 ${data.skipped} 条` +
         (data.invalid > 0 ? `，无效 ${data.invalid} 条` : "")
     );
+    const expected = (stats.value?.total ?? 0) + data.imported;
+    await waitStats((s) => s.total >= expected);
     await refresh();
   } catch (e: any) {
     Toast.error(e?.response?.data?.message || "文件导入失败");
   } finally {
     importing.value = false;
     importProgress.value = "";
+  }
+}
+
+// 索引是异步更新的，写操作后等概览收敛再刷新，不然列表和概览会短暂对不上
+async function waitStats(pred: (s: Stats) => boolean) {
+  for (let i = 0; i < 60; i++) {
+    try {
+      const { data } = await axiosInstance.get<Stats>(`${CONSOLE_BASE}/wallpapers/stats`);
+      if (pred(data)) return;
+    } catch {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 }
 
@@ -229,6 +247,7 @@ async function purgeAll() {
       try {
         const { data } = await axiosInstance.delete(`${CONSOLE_BASE}/wallpapers`, { timeout: 120000 });
         Toast.success(`已清空 ${data.deleted} 条数据`);
+        await waitStats((s) => s.total === 0);
       } catch (e: any) {
         Toast.error(e?.response?.data?.message || "清空请求异常，刷新后查看实际状态");
       } finally {
@@ -310,6 +329,8 @@ async function deleteDetail() {
         await axiosInstance.delete(`${CORE_BASE}/wallpapers/${name}`);
         Toast.success("已删除");
         detailVisible.value = false;
+        const expected = (stats.value?.total ?? 0) - 1;
+        await waitStats((s) => s.total <= expected);
         await refresh();
       } catch (e) {
         Toast.error("删除失败");

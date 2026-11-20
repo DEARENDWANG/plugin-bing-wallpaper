@@ -13,9 +13,16 @@ rules:
   - apiGroups: ["bingwallpaper.dearend.wang"]
     resources: ["wallpapers"]
     verbs: ["get", "list"]
+  # GET 自定义路径被解析为 resource=wallpapers + name，用 resourceNames 限定
+  # Halo 2.26 的 resourceNames 只匹配首项，每个名字单独一条规则
   - apiGroups: ["console.api.bingwallpaper.dearend.wang"]
-    resources: ["wallpapers/stats", "wallpapers/export"]
-    verbs: ["get", "list"]
+    resources: ["wallpapers"]
+    resourceNames: ["stats"]
+    verbs: ["get"]
+  - apiGroups: ["console.api.bingwallpaper.dearend.wang"]
+    resources: ["wallpapers"]
+    resourceNames: ["export"]
+    verbs: ["get"]
 ---
 apiVersion: v1alpha1
 kind: Role
@@ -33,10 +40,16 @@ metadata:
 rules:
   - apiGroups: ["bingwallpaper.dearend.wang"]
     resources: ["wallpapers"]
-    verbs: ["*"]
+    verbs: ["get", "list", "delete"]
   - apiGroups: ["console.api.bingwallpaper.dearend.wang"]
-    resources: ["wallpapers/import", "wallpapers/import-data", "wallpapers/fetch-today"]
-    verbs: ["create", "update", "get", "list"]
+    resources: ["wallpapers"]
+    verbs: ["delete"]
+  # POST 自定义路径按 nonResourceURL 匹配
+  - nonResourceURLs:
+      - /apis/console.api.bingwallpaper.dearend.wang/v1alpha1/wallpapers/import
+      - /apis/console.api.bingwallpaper.dearend.wang/v1alpha1/wallpapers/import-data
+      - /apis/console.api.bingwallpaper.dearend.wang/v1alpha1/wallpapers/fetch-today
+    verbs: ["create"]
 ---
 apiVersion: v1alpha1
 kind: Role
@@ -48,5 +61,5 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-anonymous: "true"
 rules:
   - apiGroups: ["api.bingwallpaper.dearend.wang"]
-    resources: ["wallpapers", "wallpapers/today", "wallpapers/years"]
+    resources: ["wallpapers"]
     verbs: ["get", "list"]

@@ -43,6 +43,7 @@ public class WallpaperEndpoint implements CustomEndpoint {
     private final ReactiveExtensionClient client;
     private final DailyFetchScheduler scheduler;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final long MAX_IMPORT_BYTES = 32L * 1024 * 1024;
 
     public WallpaperEndpoint(WallpaperService service, BingFetcher fetcher,
                              ReactiveSettingFetcher settingFetcher, ReactiveExtensionClient client,
@@ -149,19 +150,19 @@ public class WallpaperEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> importData(ServerRequest request) {
         return request.bodyToFlux(DataBuffer.class)
             .reduce(new ByteArrayOutputStream(), (baos, buffer) -> {
-                byte[] bytes = new byte[buffer.readableByteCount()];
+                int size = buffer.readableByteCount();
+                if (baos.size() + size > MAX_IMPORT_BYTES) {
+                    DataBufferUtils.release(buffer);
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "文件过大，最大支持 32MB");
+                }
+                byte[] bytes = new byte[size];
                 buffer.read(bytes);
                 DataBufferUtils.release(buffer);
-                baos.write(bytes, 0, bytes.length);
+                baos.write(bytes, 0, size);
                 return baos;
             })
-            .flatMap(baos -> {
-                if (baos.size() > 32 * 1024 * 1024) {
-                    return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "文件过大，最大支持 32MB"));
-                }
-                return doImport(baos.toString(StandardCharsets.UTF_8));
-            })
+            .flatMap(baos -> doImport(baos.toString(StandardCharsets.UTF_8)))
             .flatMap(counts -> ServerResponse.ok().contentType(APPLICATION_JSON).bodyValue(counts));
     }
 
@@ -175,6 +176,7 @@ public class WallpaperEndpoint implements CustomEndpoint {
         if (!array.isArray()) {
             return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "应为壁纸 JSON 数组"));
         }
+        int currentYear = LocalDate.now(BingFetcher.ZONE).getYear();
         var imported = new AtomicInteger();
         var skipped = new AtomicInteger();
         var invalid = new AtomicInteger();
@@ -182,6 +184,12 @@ public class WallpaperEndpoint implements CustomEndpoint {
             .concatMap(item -> {
                 String date = item.path("date").asString("");
                 if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                    invalid.incrementAndGet();
+                    return Mono.empty();
+                }
+                // 与按接口导入同范围，years/stats 才能按 2000..currentYear 索引统计
+                int year = Integer.parseInt(date.substring(0, 4));
+                if (year < 2000 || year > currentYear) {
                     invalid.incrementAndGet();
                     return Mono.empty();
                 }
@@ -281,7 +289,7 @@ public class WallpaperEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> fetchToday(ServerRequest request) {
         return fetcher.fetchToday()
             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_GATEWAY,
-                "必应官方接口与备用接口均未返回今日壁纸")))
+                "必应官方接口未返回今日壁纸")))
             .flatMap(spec -> service.saveIfAbsent(spec)
                 .flatMap(created -> {
                     var result = new LinkedHashMap<String, Object>();

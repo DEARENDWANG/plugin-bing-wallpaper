@@ -3,16 +3,17 @@ package wang.dearend.bingwallpaper;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
@@ -48,15 +49,18 @@ public class PublicWallpaperEndpoint implements CustomEndpoint {
     }
 
     private Mono<ServerResponse> years(ServerRequest request) {
-        return service.listAll(Sort.by(Sort.Order.desc("spec.date")))
+        int currentYear = LocalDate.now(BingFetcher.ZONE).getYear();
+        return Flux.range(2000, currentYear - 2000 + 1)
+            .map(String::valueOf)
+            .concatMap(year -> service.countByYear(year)
+                .filter(count -> count > 0)
+                .map(count -> Map.<String, Object>of("year", year, "count", count)))
             .collectList()
-            .flatMap(all -> {
-                var counts = new LinkedHashMap<String, Integer>();
-                for (Wallpaper wallpaper : all) {
-                    counts.merge(wallpaper.getSpec().getYear(), 1, Integer::sum);
-                }
+            .flatMap(entries -> {
                 var result = new ArrayList<Map<String, Object>>();
-                counts.forEach((year, count) -> result.add(Map.of("year", year, "count", count)));
+                for (int i = entries.size() - 1; i >= 0; i--) {
+                    result.add(entries.get(i));
+                }
                 return ServerResponse.ok().contentType(APPLICATION_JSON).bodyValue(result);
             });
     }
