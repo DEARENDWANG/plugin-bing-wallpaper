@@ -42,7 +42,7 @@
 
 ### 手动安装
 
-1. 前往 [Releases](https://github.com/DEARENDWANG/plugin-bing-wallpaper/releases) 下载 `plugin-bing-wallpaper-1.0.1.jar`
+1. 前往 [Releases](https://github.com/DEARENDWANG/plugin-bing-wallpaper/releases) 下载 `plugin-bing-wallpaper-1.0.0.jar`
 2. Halo 后台 → 插件 → 安装插件 → 上传 JAR
 3. 启用插件
 
@@ -179,12 +179,6 @@ GET /apis/api.bingwallpaper.dearend.wang/v1alpha1/wallpapers/years
 环境：JDK 21+；UI 工具链（Node 20 / pnpm 9）由 Gradle 自动管理。
 
 ## 更新日志
-
-### v1.0.1
-
-- 修正「壁纸查看 / 壁纸管理」角色权限规则：查看可用统计与导出，管理可用抓取 / 导入 / 删除 / 清空，与文档一致
-- JSON 导入在读体过程中即执行 32MB 限制；公开 years 接口改为按年索引统计
-- 抓取 / 导入 / 删除 / 清空后等待数据真正可见再刷新页面，概览与列表不再短暂不一致
 
 ### v1.0.0
 

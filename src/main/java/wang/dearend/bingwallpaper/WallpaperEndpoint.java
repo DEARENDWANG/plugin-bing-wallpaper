@@ -43,7 +43,7 @@ public class WallpaperEndpoint implements CustomEndpoint {
     private final ReactiveExtensionClient client;
     private final DailyFetchScheduler scheduler;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final long MAX_IMPORT_BYTES = 32L * 1024 * 1024;
+    private static final long MAX_IMPORT_BYTES = 16L * 1024 * 1024;
 
     public WallpaperEndpoint(WallpaperService service, BingFetcher fetcher,
                              ReactiveSettingFetcher settingFetcher, ReactiveExtensionClient client,
@@ -154,7 +154,7 @@ public class WallpaperEndpoint implements CustomEndpoint {
                 if (baos.size() + size > MAX_IMPORT_BYTES) {
                     DataBufferUtils.release(buffer);
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "文件过大，最大支持 32MB");
+                        "文件过大，最大支持 16MB");
                 }
                 byte[] bytes = new byte[size];
                 buffer.read(bytes);
