@@ -13,5 +13,6 @@ jobs:
       ui-path: ui
       node-version: "20"
       pnpm-version: "9"
-      # 首次上架审核通过后再配置 app-id 与 halo-pat，并移除 skip-appstore-release
-      skip-appstore-release: true
+      app-id: app-ditb0eu3
+    secrets:
+      halo-pat: ${{ secrets.HALO_PAT }}
